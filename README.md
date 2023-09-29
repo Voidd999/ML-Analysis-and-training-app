@@ -22,3 +22,10 @@ This Streamlit app is a machine learning analysis and training tool that allows 
 
    ```shell
    git clone https://github.com/YourGitHubUsername/AutoML-Streamlit-App.git
+
+2. Install Requirements
+   ```shell
+   pip install -r requirements.txt
+3. Run The App
+   ```shell
+   streamlit run app.py
