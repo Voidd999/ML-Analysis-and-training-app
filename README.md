@@ -1,6 +1,5 @@
 # AutoML Streamlit App
 
-![Project Logo](https://www.onepointltd.com/wp-content/uploads/2020/03/inno2.png)
 
 This Streamlit app is a machine learning analysis and training tool that allows users to upload datasets, perform exploratory data analysis (EDA), and build predictive models. It provides an interactive interface for data exploration and model evaluation.
 
