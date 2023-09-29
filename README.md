@@ -17,10 +17,7 @@ This Streamlit app is a machine learning analysis and training tool that allows 
 
 ## Usage
 
-1. Clone this repository to your local machine:
-
-   ```shell
-   git clone https://github.com/YourGitHubUsername/AutoML-Streamlit-App.git
+1. Clone this repository to your local machine
 
 2. Install Requirements
    ```shell
