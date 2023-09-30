@@ -2,7 +2,7 @@
 
 
 This Streamlit app is a machine learning analysis and training tool that allows users to upload datasets, perform exploratory data analysis (EDA), and build predictive models. It provides an interactive interface for data exploration and model evaluation.
-Check out the deployed app here(https://mlbyvoid.streamlit.app)
+
 
 ## Features
 
