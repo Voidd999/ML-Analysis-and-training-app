@@ -11,6 +11,7 @@ from sklearn.metrics import (
     max_error,
 )
 import os
+
 # Check if 'data' directory exists, create it if not
 if not os.path.exists("./data"):
     os.makedirs("./data")
@@ -49,25 +50,43 @@ if choice == "EDA":
         st.subheader("Summary Statistics:")
         st.dataframe(df)
         st.write(df.describe())
-
-        st.subheader("Heatmap:")
-        corr_matrix = df.corr()
-        fig, ax = plt.subplots()
-        sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
-        st.pyplot(fig)
-
         st.subheader("Missing Values:")
         missing_values = df.isnull().sum()
         st.dataframe(missing_values)
 
+        st.subheader("Correlation")
+        corr_matrix = df.corr()
+        correlation_plot_type = st.selectbox(
+            "Select Plot Type", ["Heatmap", "Scatterplot"]
+        )
+
+        if correlation_plot_type == "Heatmap":
+            fig, ax = plt.subplots()
+            sns.heatmap(corr_matrix, annot=True, cmap="YlGnBu", fmt=".2f", ax=ax)
+            ax.set_xticklabels(
+                ax.get_xticklabels(), rotation=45, horizontalalignment="right"
+            )
+            st.pyplot(fig)
+        elif correlation_plot_type == "Scatterplot":
+            st.subheader("Select Two Features")
+            feature1 = st.selectbox("Feature 1", df.columns)
+            feature2 = st.selectbox("Feature 2", df.columns)
+
+            fig, ax = plt.subplots()
+            sns.scatterplot(data=df, x=feature1, y=feature2, ax=ax)
+            ax.set_xticklabels(
+                ax.get_xticklabels(), rotation=45, horizontalalignment="right"
+            )
+            st.pyplot(fig)
+
         st.subheader("Data Visualization:")
         # Creating histograms for numeric columns
         numeric_cols = df.select_dtypes(include=["number"]).columns
-        for col in numeric_cols:
-            st.write(f"**{col}**")
-            fig, ax = plt.subplots()
-            sns.histplot(df[col], ax=ax, kde=True)
-            st.pyplot(fig)
+        cols = st.selectbox("Choose a Numeric Column", numeric_cols)
+        st.subheader(f"Histogram of {cols}")
+        fig, ax = plt.subplots()
+        sns.histplot(df[cols], ax=ax, kde=True, element="poly")
+        st.pyplot(fig)
 
         # Creating bar charts for categorical columns
         st.subheader("Choose a Categorical Feature for Comparison")
