@@ -6,34 +6,41 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.metrics import (
-    mean_absolute_error,
-    max_error,
-)
+from sklearn.metrics import mean_absolute_error, max_error
 import os
+
+# set the default parameters for the plots
+plt.rcParams["font.sans-serif"] = "DejaVu Sans"
+plt.rcParams["font.family"] = "sans-serif"
 
 # Check if 'data' directory exists, create it if not
 if not os.path.exists("./data"):
     os.makedirs("./data")
+
 # Load the dataset if it exists
 if os.path.exists("./data/dataset.csv"):
-    df = pd.read_csv("./data/dataset.csv")
+    df = pd.read_csv("./data/dataset.csv", encoding="latin-1")
 else:
     df = pd.DataFrame()
+
 # Sidebar and navigation
 with st.sidebar:
     st.title(":bar_chart: ML Analysis and Training")
     st.markdown("By [Dipanshu Gupta](https://github.com/Voidd999)")
     st.markdown(
-        "This app is a ML analysis and training app built with Streamlit. It allows you to upload a dataset, perform EDA, and build a model."
+        "This app is an ML analysis and training app built with Streamlit. It allows you to upload a dataset, perform EDA, and build a model on **smaller datasets**."
     )
     choice = st.radio("Navigate", ["Upload", "EDA", "Model"])
+    st.info(
+        "This app is currently in experimental stage. Deployment is not recommended as data security concerns have not been addressed."
+    )
 
 if choice == "Upload":
     st.title("Upload A Dataset")
+    st.markdown("Upload a dataset")
     file = st.file_uploader("Upload a CSV file")
     if file:
-        df = pd.read_csv(file)
+        df = pd.read_csv(file, encoding="latin-1")
         df.to_csv("./data/dataset.csv", index=False)
         st.success("File uploaded successfully!")
         st.subheader(f"{file.name}")
@@ -44,6 +51,7 @@ if choice == "Upload":
         st.header(f"Dataset Loaded")
         st.write(df.head())
 
+#
 if choice == "EDA":
     st.title("Exploratory Data Analysis")
     if not df.empty:
@@ -55,25 +63,41 @@ if choice == "EDA":
         st.dataframe(missing_values)
 
         st.subheader("Correlation")
-        corr_matrix = df.corr()
         correlation_plot_type = st.selectbox(
-            "Select Plot Type", ["Heatmap", "Scatterplot"]
+            "Select Plot Type",
+            [
+                "Heatmap",
+                "Scatterplot",
+                "Bubble Chart",
+                "",
+            ],  # "Heatmap", "Scatterplot", "Bubble Chart
         )
 
         if correlation_plot_type == "Heatmap":
+            numeric_cols = df.select_dtypes(include=["number"]).columns
+            corr_matrix = df[numeric_cols].corr()
             fig, ax = plt.subplots()
-            sns.heatmap(corr_matrix, annot=True, cmap="YlGnBu", fmt=".2f", ax=ax)
-            ax.set_xticklabels(
-                ax.get_xticklabels(), rotation=45, horizontalalignment="right"
-            )
+            sns.heatmap(corr_matrix, annot=True, cmap="crest", fmt=".2f", ax=ax)
             st.pyplot(fig)
         elif correlation_plot_type == "Scatterplot":
-            st.subheader("Select Two Features")
+            st.subheader("Select Two Features:")
             feature1 = st.selectbox("Feature 1", df.columns)
             feature2 = st.selectbox("Feature 2", df.columns)
 
             fig, ax = plt.subplots()
             sns.scatterplot(data=df, x=feature1, y=feature2, ax=ax)
+            ax.set_xticklabels(
+                ax.get_xticklabels(), rotation=45, horizontalalignment="right"
+            )
+            st.pyplot(fig)
+        elif correlation_plot_type == "Bubble Chart":
+            st.subheader("Select Three Features:")
+            feature1 = st.selectbox("Feature 1", df.columns)
+            feature2 = st.selectbox("Feature 2", df.columns)
+            feature3 = st.selectbox("Bubble Size (Feature 3)", df.columns)
+
+            fig, ax = plt.subplots()
+            sns.scatterplot(data=df, x=feature1, y=feature2, size=feature3, ax=ax)
             ax.set_xticklabels(
                 ax.get_xticklabels(), rotation=45, horizontalalignment="right"
             )
@@ -133,7 +157,6 @@ if choice == "EDA":
     else:
         st.info("Please upload a dataset to begin EDA.")
 
-
 if choice == "Model":
     st.title("Model Building and Evaluation")
     if not df.empty:
@@ -149,20 +172,40 @@ if choice == "Model":
         for col in categorical_columns:
             df[col] = df[col].str.strip().astype(str)
         # model selection
+        from sklearn.ensemble import HistGradientBoostingRegressor
+
         model = st.selectbox(
             "Select a  Model",
             [
                 "Random Forest",
                 "Linear Regression",
                 "Gradient Boosting",
+                "HistGradient Boosting",
                 "K-Nearest Neighbors",
             ],
         )
         categorical_columns = [col for col in df.columns if df[col].dtype == "object"]
         # Encode categorical features using one-hot encoding
         df_encoded = pd.get_dummies(df, columns=categorical_columns)
-        show_encoded_df = st.checkbox("Show Encoded DataFrame")
 
+        impute_data = st.checkbox("Impute Missing Values Automatically", value=True)
+        if impute_data:
+            from sklearn.impute import SimpleImputer
+
+            imputer = SimpleImputer(strategy="mean")
+            df_encoded_imputed = pd.DataFrame(
+                imputer.fit_transform(df_encoded), columns=df_encoded.columns
+            )
+            st.info("Missing values imputed automatically.")
+            show_imputed_df = st.checkbox("Show Imputed DataFrame")
+            if show_imputed_df:
+                st.subheader("Imputed DataFrame")
+                st.dataframe(df_encoded_imputed)
+            df_encoded = df_encoded_imputed
+        else:
+            df_encoded = df_encoded
+
+        show_encoded_df = st.checkbox("Show Encoded DataFrame")
         if show_encoded_df:
             st.subheader("One Hot Encoded DataFrame")
             st.dataframe(df_encoded)
@@ -179,6 +222,8 @@ if choice == "Model":
             model = RandomForestRegressor()
         elif model == "Gradient Boosting":
             model = GradientBoostingRegressor()
+        elif model == "HistGradient Boosting":
+            model = HistGradientBoostingRegressor()
         elif model == "K-Nearest Neighbors":
             model = KNeighborsRegressor()
 
@@ -194,6 +239,14 @@ if choice == "Model":
         )
         st.write(f"Score: {model.score(X_test, y_test):.2f}")
         st.write(f"max_error: {max_error(y_test, y_pred):.2f}")
+        loss = st.checkbox("Show Loss")
+        if loss:
+            st.subheader("Loss")
+            fig, ax = plt.subplots()
+            sns.histplot(
+                y_test - y_pred, ax=ax, element="poly", label="Loss", color="green"
+            )
+            st.pyplot(fig)
 
         features = st.checkbox("Show Features in Model")
         if features:
@@ -207,7 +260,7 @@ if choice == "Model":
             else:
                 st.info("Feature importance not available for this model.")
 
-        prediction = st.checkbox("Make Predictions on New Data")
+        prediction = st.checkbox("Make Predictions on New Data (Experimental)")
         if prediction:
             st.title("Test Model Predictions")
             st.info("Enter values for the encoded features to get predictions.")
@@ -217,8 +270,8 @@ if choice == "Model":
             for feature in X.columns:
                 feature_values[feature] = st.number_input(
                     f"Enter {feature}",
-                    min_value=X[feature].min(),
-                    max_value=X[feature].max(),
+                    min_value=float(X[feature].min()),  # Convert to float
+                    max_value=float(X[feature].max()),
                 )
 
             if st.button("Get Prediction"):
