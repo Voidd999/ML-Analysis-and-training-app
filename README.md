@@ -16,7 +16,7 @@ This Streamlit app is a machine learning analysis and training tool that allows 
 - Make predictions on new data using the trained model.
 - Save and download the trained model for future use.
 
-
+### This application is currently in experimental stage. Deployment is not recommended as data security concerns have not been addressed.
 ## Sample Datsets
 You can use these sample datasets from Kaggle -
 https://www.kaggle.com/datasets/joebeachcapital/subway-nutrition/code
